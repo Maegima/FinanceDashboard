@@ -4,18 +4,40 @@ $(function () {
     });
     result = $.get("http://localhost:5000/finances", (response) => {
         console.log(response);
+        referenceSelect = $("#finance-form").find("select[name=reference]");
         response.forEach((value) => {
             destination = value.destination ? value.destination.name : null;
             datatable.row.add([
                 value.id, value.value, value.description, value.type.name,
                 value.source.name, destination, value.referenceId, value.created
             ])
+            referenceSelect.append(`<option value=${value.id}>${value.id} - ${value.description}</option>`)
+        });
+        datatable.draw();
+    })
+
+    result = $.get("http://localhost:5000/finance/types", (response) => {
+        console.log(response);
+        typeSelect = $("#finance-form").find("select[name=type]");
+        response.forEach((value) => {
+            typeSelect.append(`<option value=${value.id}>${value.name}</option>`)
+        });
+        datatable.draw();
+    })
+
+    result = $.get("http://localhost:5000/accounts", (response) => {
+        console.log(response);
+        sourceSelect = $("#finance-form").find("select[name=source]");
+        destinationSelect = $("#finance-form").find("select[name=destination]");
+        response.forEach((value) => {
+            sourceSelect.append(`<option value=${value.id}>${value.name}</option>`)
+            destinationSelect.append(`<option value=${value.id}>${value.name}</option>`)
         });
         datatable.draw();
     })
 
     $('#datepicker').datepicker({
-        format: 'dd/mm/yyyy',
+        format: 'yyyy-mm-dd',
     });
 
     feather.replace({ 'aria-hidden': 'true' })
