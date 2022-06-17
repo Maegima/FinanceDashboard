@@ -2,14 +2,22 @@ $(function () {
     datatable = $('#datatable').DataTable({
         scrollX: true,
     });
+
+    $.ajaxSetup({
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        }
+    });
+
     result = $.get("http://localhost:5000/finances", (response) => {
         console.log(response);
-        referenceSelect = $("#finance-form").find("select[name=reference]");
+        var referenceSelect = $("#finance-form").find("select[name=reference]");
         response.forEach((value) => {
             destination = value.destination ? value.destination.name : null;
             datatable.row.add([
                 value.id, value.value, value.description, value.type.name,
-                value.source.name, destination, value.referenceId, value.created
+                value.source.name, destination, value.referenceId, value.datetime
             ])
             referenceSelect.append(`<option value=${value.id}>${value.id} - ${value.description}</option>`)
         });
@@ -18,7 +26,7 @@ $(function () {
 
     result = $.get("http://localhost:5000/finance/types", (response) => {
         console.log(response);
-        typeSelect = $("#finance-form").find("select[name=type]");
+        var typeSelect = $("#finance-form").find("select[name=type]");
         response.forEach((value) => {
             typeSelect.append(`<option value=${value.id}>${value.name}</option>`)
         });
@@ -27,8 +35,8 @@ $(function () {
 
     result = $.get("http://localhost:5000/accounts", (response) => {
         console.log(response);
-        sourceSelect = $("#finance-form").find("select[name=source]");
-        destinationSelect = $("#finance-form").find("select[name=destination]");
+        var sourceSelect = $("#finance-form").find("select[name=source]");
+        var destinationSelect = $("#finance-form").find("select[name=destination]");
         response.forEach((value) => {
             sourceSelect.append(`<option value=${value.id}>${value.name}</option>`)
             destinationSelect.append(`<option value=${value.id}>${value.name}</option>`)
@@ -39,6 +47,28 @@ $(function () {
     $('#datepicker').datepicker({
         format: 'yyyy-mm-dd',
     });
+
+    $('#new-finance').on("click", function(){
+        var inputs = $("#finance-form").find("input");
+        var selects = $("#finance-form").find("select");
+        var financeObj = {};
+        inputs.each((index, input) => {
+            if(input.value != ""){
+                financeObj[input.name] = input.value;
+            }
+        })
+        
+        selects.each((index, input) => {
+            if(input.value != ""){
+                financeObj[input.name] = { id: input.value };
+            }
+        })
+        financeObj.datetime = new Date(financeObj.datetime).toISOString();
+
+        result = $.post("http://localhost:5000/finance", JSON.stringify(financeObj), (response) => {
+            console.log(response);
+        })
+    })
 
     feather.replace({ 'aria-hidden': 'true' })
 

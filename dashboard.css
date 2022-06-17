@@ -166,3 +166,9 @@ body {
 .datepicker td:hover, .datepicker th:hover{
   cursor: default;
 }
+
+#datatable td {
+  overflow: hidden; /* this is what fixes the expansion */
+  text-overflow: ellipsis; /* not supported in all browsers, but I accepted the tradeoff */
+  white-space: nowrap;
+}
