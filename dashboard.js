@@ -65,8 +65,19 @@ $(function () {
         })
         financeObj.datetime = new Date(financeObj.datetime).toISOString();
 
-        result = $.post("http://localhost:5000/finance", JSON.stringify(financeObj), (response) => {
-            console.log(response);
+        result = $.post("http://localhost:5000/finance", JSON.stringify(financeObj), (response) => {    
+            if(response.length > 0){
+                response[0].id;
+                result2 = $.get(`http://localhost:5000/finance/${response[0].id}`, (response) => {
+                    value = response;
+                    destination = value.destination ? value.destination.name : null;
+                    datatable.row.add([
+                        value.id, value.value, value.description, value.type.name,
+                        value.source.name, destination, value.referenceId, value.datetime
+                    ])
+                    datatable.draw();
+                })
+            }
         })
     })
 
