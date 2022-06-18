@@ -1,6 +1,7 @@
 $(function () {
     datatable = $('#datatable').DataTable({
         scrollX: true,
+        order: [[0, 'desc']],
     });
 
     $.ajaxSetup({
@@ -19,8 +20,12 @@ $(function () {
                 value.id, value.value, value.description, value.type.name,
                 value.source.name, destination, value.referenceId, value.datetime
             ])
+        });
+
+        response.reverse().forEach((value) => {
             referenceSelect.append(`<option value=${value.id}>${value.id} - ${value.description}</option>`)
         });
+
         datatable.draw();
     })
 
@@ -76,6 +81,10 @@ $(function () {
                         value.source.name, destination, value.referenceId, value.datetime
                     ])
                     datatable.draw();
+
+                    var referenceSelect = $("#finance-form").find("select[name=reference]");
+                    var option = $(referenceSelect).find("option")[0];
+                    $(option).after(`<option value=${value.id}>${value.id} - ${value.description}</option>`)
                 })
             }
         })
