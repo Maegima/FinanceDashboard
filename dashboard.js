@@ -215,6 +215,7 @@ $(function () {
                 }).done((response) =>{
                     cell.data(display);
                 }).fail((xhr, textStatus, errorThrown) => {
+                    cell.node().innerHTML = cell.data();
                     datatable.draw();
                     alert(xhr.responseText);
                 })
