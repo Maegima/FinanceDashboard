@@ -2,14 +2,29 @@ var selected_col;
 var col_data;
 var col_disp;
 
-function newInput(value){
-    var element;
-    if(value != undefined)
-        element = `<input type=text value="${value}">`;
-    else
-        element = "<input type=text>";
+function setAttribute(element, attrs, attribute){
+    if(attrs[attribute] !== undefined){
+        element[attribute] = attrs[attribute];
+        delete attrs[attribute];
+    }
+}
+
+function createElement(tagName, attrs = {}){
+    element = document.createElement(tagName);
+    setAttribute(element, attrs, "text");
+    Object.keys(attrs).forEach(function(key){
+        element.setAttribute(key, attrs[key]);
+    })
     
     return element;
+}
+
+function lowerFirstLetter(string) {
+    return string.charAt(0).toLowerCase() + string.slice(1);
+}
+
+function empty(value){
+    return value == "" || value == null || value == undefined;
 }
 
 $(function () {
@@ -108,44 +123,34 @@ $(function () {
         })
     })
 
-    function empty(value){
-        return value == "" || value == null || value == undefined;
-    }
-
-    function compareData(current, old){
-        list = [];
-        for(var i = 0; i < current.length; i++){
-            //console.log(index, nodeList[index]);
-            if(old[i] == current[i])
-                return false;
+    function buildSelect(select, selected = undefined){
+        return function(){
+            if(this.innerHTML == selected)
+                select.append(createElement("option", {value: this.value, text: this.innerHTML, selected: "selected"}))
+            else
+                select.append(createElement("option", {value: this.value, text: this.innerHTML}))
         }
-        return true;
     }
 
     function changeField(cell){
         var columnId = cell.index().column;
-        var column = cell.column(columnId).header().innerHTML.toLowerCase();
-        node = cell.node();
+        var column = lowerFirstLetter(cell.column(columnId).header().innerHTML);
+        var node = cell.node();
         
         switch(column){
             case "type":
-                var typeSelect = $("#finance-form").find("select[name=type]");
-                var input = document.createElement("select");
-                typeSelect.children().each(function(){
-                    if(this.innerHTML == cell.data())
-                        input.innerHTML += `<option selected="selected" value=${this.value}>${this.innerHTML}</option>`
-                    else
-                        input.innerHTML += `<option value=${this.value}>${this.innerHTML}</option>`
-                });
+            case "source":
+            case "destination":
+                var select = $("#finance-form").find(`select[name=${column}]`);
+                var input = createElement("select");
+                select.children().each(buildSelect(input, cell.data()));
                 node.innerHTML = input.outerHTML;
                 var input = node.children[0];
 
                 $(input).on("change", changeUpdate);
-                $(input).trigger('mousedown');
                 break;
             default:
-                var input = document.createElement("input");
-                input.setAttribute("value", node.innerHTML);
+                var input = createElement("input", {value: node.innerHTML});
                 const end = input.value.length;
                 input.setSelectionRange(end, end);
                 node.innerHTML = input.outerHTML;
@@ -205,7 +210,7 @@ $(function () {
             selected_col = this;
             col_disp = cell.data();
         }
-    }) 
+    })
 
     $('#finance-body').on("focusout", "td", function() {
         if(this == selected_col){
@@ -214,7 +219,7 @@ $(function () {
                 var row = datatable.row(selected_col);
                 var col = cell.index().column;
                 id = row.data()[0];
-                key = cell.column(col).header().innerHTML.toLowerCase();
+                key = lowerFirstLetter(cell.column(col).header().innerHTML);
                 data = `{"${key}": ${col_data}}`;
                 $.ajax({
                     url: `http://localhost:5000/finance/${id}`,

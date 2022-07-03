@@ -174,10 +174,10 @@ body {
   min-width: 100px;
 }
 
-#datatable td input {
+#datatable td input, #datatable td select {
   width: 100%;
   height: 100%;
   border: 0px;
-  background-color: lightblue;
+  background-color: transparent;
   padding: 0px;
 }
