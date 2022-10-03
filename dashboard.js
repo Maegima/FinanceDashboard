@@ -1,12 +1,53 @@
 var selected_col;
 var col_data;
 var col_disp;
+var dataValues = [];
 
 function setAttribute(element, attrs, attribute){
     if(attrs[attribute] !== undefined){
         element[attribute] = attrs[attribute];
         delete attrs[attribute];
     }
+}
+
+function groupByMonthAndAsset(data){
+    group = { 
+        active: {
+            color: '#007bff',
+            label: "active",
+            months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        }, 
+        passive: {
+            color: '#ff007b',
+            label: "passive",
+            months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        }, 
+        neutral: {
+            color: '#C0C0C0',
+            label: "neutral",
+            months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        },
+        delayed: {
+            color: '#ff7b00',
+            label: "delayed",
+            months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        }
+    };
+    valor = 0;
+    data.forEach((item) => {
+        month = parseInt(item.datetime.substring(5, 7));
+        asset = item.type.asset != null ? item.type.asset : "neutral";
+        asset = item.type.name != "DELAYED" ? asset : "delayed";
+        
+        group[asset].months[month-1] += item.value;
+    })
+    group.active
+
+    return group;
+}
+
+function groupByType(data){
+
 }
 
 function createElement(tagName, attrs = {}){
@@ -45,6 +86,7 @@ $(function () {
         console.log(response);
         var referenceSelect = $("#finance-form").find("select[name=reference]");
         const paramList = ["id", "value", "description", "type", "source", "destination", "referenceId", "datetime"]
+        dataValues = groupByMonthAndAsset(response);
         response.forEach((value) => {
             value.destination = value.destination ? value.destination.name : null;
             value.type = value.type.name;
@@ -59,6 +101,7 @@ $(function () {
             referenceSelect.append(`<option value=${value.id}>${value.id} - ${value.description}</option>`)
         });
 
+        setTimeout(test, 1)
         datatable.draw();
     })
 
@@ -248,30 +291,30 @@ $(function () {
     })
 
     feather.replace({ 'aria-hidden': 'true' })
-
-    setTimeout(test, 1)
 })
+
+function toDataSet(asset){
+    return {
+        data: asset.months,
+        lineTension: 0,
+        backgroundColor: 'transparent',
+        borderColor: asset.color,
+        borderWidth: 4,
+        pointBackgroundColor: asset.color,
+        label: asset.label
+    }
+}
 
 async function test() {
     // Graphs
+    console.log(dataValues);
     const ctx = document.getElementById('myChart')
     // eslint-disable-next-line no-unused-vars
     const myChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: [
-                'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
-            ],
-            datasets: [{
-                data: [
-                    15339, 21345, 18483, 24003, 23489, 24092, 12034
-                ],
-                lineTension: 0,
-                backgroundColor: 'transparent',
-                borderColor: '#007bff',
-                borderWidth: 4,
-                pointBackgroundColor: '#007bff'
-            }]
+            labels: ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"],
+            datasets: [toDataSet(dataValues.active), toDataSet(dataValues.passive), toDataSet(dataValues.neutral), toDataSet(dataValues.delayed)]
         },
         options: {
             scales: {},
