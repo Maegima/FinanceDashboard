@@ -2,6 +2,7 @@ var selected_col;
 var col_data;
 var col_disp;
 var dataValues = [];
+var myChart = null;
 
 function setAttribute(element, attrs, attribute){
     if(attrs[attribute] !== undefined){
@@ -34,7 +35,7 @@ function groupByMonthAndAsset(data){
         }
     };
     valor = 0;
-    data.forEach((item) => {
+    data.each((item) => {
         month = parseInt(item.datetime.substring(5, 7));
         asset = item.type.asset != null ? item.type.asset : "neutral";
         asset = item.type.name != "DELAYED" ? asset : "delayed";
@@ -72,8 +73,22 @@ $(function () {
     datatable = $('#datatable').DataTable({
         scrollX: true,
         order: [[0, 'desc']],
-        autoWidth: false
+        autoWidth: false,
+        columns: [
+            { "data": "id" },
+            { "data": "value" },
+            { "data": "description" },
+            { "data": "typeName" },
+            { "data": "source" },
+            { "data": "destination" },
+            { "data": "referenceId" },
+            { "data": "datetime" }
+        ]
     });
+
+    datatable.on('draw.dt', function(){
+        setTimeout(test, 1, datatable.rows({search: "applied"}).data());
+    })
 
     $.ajaxSetup({
         headers: {
@@ -83,26 +98,18 @@ $(function () {
     });
 
     result = $.get("http://localhost:5000/finances", (response) => {
-        console.log(response);
         var referenceSelect = $("#finance-form").find("select[name=reference]");
-        const paramList = ["id", "value", "description", "type", "source", "destination", "referenceId", "datetime"]
-        dataValues = groupByMonthAndAsset(response);
         response.forEach((value) => {
             value.destination = value.destination ? value.destination.name : null;
-            value.type = value.type.name;
+            value.typeName = value.type.name;
             value.source = value.source.name;
-
-            datatable.row.add(paramList.map((key) => {
-                return value[key];
-            }));
         });
 
         response.reverse().forEach((value) => {
             referenceSelect.append(`<option value=${value.id}>${value.id} - ${value.description}</option>`)
         });
 
-        setTimeout(test, 1)
-        datatable.draw();
+        datatable.rows.add(response).draw();
     })
 
     result = $.get("http://localhost:5000/finance/types", (response) => {
@@ -305,12 +312,16 @@ function toDataSet(asset){
     }
 }
 
-async function test() {
+async function test(data) {
     // Graphs
-    console.log(dataValues);
+    console.log(data);
+    dataValues = groupByMonthAndAsset(data)
     const ctx = document.getElementById('myChart')
     // eslint-disable-next-line no-unused-vars
-    const myChart = new Chart(ctx, {
+    if(myChart != null){
+        myChart.destroy();
+    }
+    myChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"],
