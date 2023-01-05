@@ -158,11 +158,11 @@ $(function () {
                 response[0].id;
                 result2 = $.get(`http://localhost:5000/finance/${response[0].id}`, (response) => {
                     value = response;
-                    destination = value.destination ? value.destination.name : null;
-                    datatable.row.add([
-                        value.id, value.value, value.description, value.type.name,
-                        value.source.name, destination, value.referenceId, value.datetime
-                    ])
+                    console.log(value);
+                    value.destination = value.destination ? value.destination.name : null;
+                    value.typeName = value.type.name;
+                    value.source = value.source.name;
+                    datatable.row.add(value);
                     datatable.draw();
 
                     var referenceSelect = $("#finance-form").find("select[name=reference]");
@@ -268,7 +268,7 @@ $(function () {
             if(col_disp != cell.data() && col_data !== undefined && col_disp !== undefined){
                 var row = datatable.row(selected_col);
                 var col = cell.index().column;
-                id = row.data()[0];
+                id = row.data()["id"];
                 key = lowerFirstLetter(cell.column(col).header().innerHTML);
                 data = `{"${key}": ${col_data}}`;
                 $.ajax({
