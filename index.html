@@ -132,10 +132,16 @@
                             <button type="button" class="btn btn-sm btn-outline-secondary">Share</button>
                             <button type="button" class="btn btn-sm btn-outline-secondary">Export</button>
                         </div>
-                        <button type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle">
-                            <span data-feather="calendar" class="align-text-bottom"></span>
-                            This week
-                        </button>
+                        <div class="dropdown">
+                            <button id="dropButton" type="button" class="btn btn-sm btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                                <span data-feather="calendar" class="align-text-bottom"></span>
+                                This year
+                            </button>
+                            <ul id="year-list" class="dropdown-menu" aria-labelledby="dropButton">
+                                <li><a class="dropdown-item" href="#">This year</a></li>
+                                <li><a class="dropdown-item" href="#">Last year</a></li>
+                            </ul>
+                        </div>
                     </div>
                 </div>
 
@@ -163,7 +169,7 @@
                     </div>
 
                     <div class="col-md-4" id=graph>
-                        <canvas class="m-2 my-4 w-100" id="myChart" width="700" height="900"></canvas>
+                        <canvas class="w-100" id="myChart" width="700" height="900"></canvas>
                     </div>
                 </div>
 
@@ -187,7 +193,10 @@
                                 </div>
                                 <div class="input-group mb-3">
                                     <span class="input-group-text">Description</span>
-                                    <input type="text" name="description" class="form-control" placeholder="Description">
+                                    <input list="datalist" type="text" name="description" class="form-control" placeholder="Description">
+                                    <datalist id="datalist">
+                                        <option></option>
+                                    </datalist>
                                 </div>
                                 <div class="input-group mb-3">
                                     <span class="input-group-text">Type</span>

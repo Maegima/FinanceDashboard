@@ -11,7 +11,7 @@ function setAttribute(element, attrs, attribute){
     }
 }
 
-function groupByMonthAndAsset(data){
+function groupByMonthAndAsset(data, SelectedYear){
     group = { 
         active: {
             color: '#007bff',
@@ -36,13 +36,14 @@ function groupByMonthAndAsset(data){
     };
     valor = 0;
     data.each((item) => {
+        year = parseInt(item.datetime.substring(0, 4));
         month = parseInt(item.datetime.substring(5, 7));
-        asset = item.type.asset != null ? item.type.asset : "neutral";
-        asset = item.type.name != "DELAYED" ? asset : "delayed";
-        
-        group[asset].months[month-1] += item.value;
+        if(year == SelectedYear){
+            asset = item.type.asset != null ? item.type.asset : "neutral";
+            asset = item.type.name != "DELAYED" ? asset : "delayed";
+            group[asset].months[month-1] += item.value;
+        }
     })
-    group.active
 
     return group;
 }
@@ -87,7 +88,7 @@ $(function () {
     });
 
     datatable.on('draw.dt', function(){
-        setTimeout(test, 1, datatable.rows({search: "applied"}).data());
+        updateChart();
     })
 
     $.ajaxSetup({
@@ -99,11 +100,18 @@ $(function () {
 
     result = $.get("http://localhost:5000/finances", (response) => {
         var referenceSelect = $("#finance-form").find("select[name=reference]");
+        var descDatalist = $("#datalist");
+        var descSet = new Set();
         response.forEach((value) => {
             value.destination = value.destination ? value.destination.name : null;
             value.typeName = value.type.name;
             value.source = value.source.name;
+            descSet.add(value.description);
         });
+
+        Array.from(descSet).sort().forEach((desc) => {
+            descDatalist.append(`<option value="${desc}">(${desc})</option>`)
+        })
 
         response.reverse().forEach((value) => {
             referenceSelect.append(`<option value=${value.id}>${value.id} - ${value.description}</option>`)
@@ -113,7 +121,7 @@ $(function () {
     })
 
     result = $.get("http://localhost:5000/finance/types", (response) => {
-        console.log(response);
+        //console.log(response);
         var typeSelect = $("#finance-form").find("select[name=type]");
         response.forEach((value) => {
             typeSelect.append(`<option value=${value.id}>${value.name}</option>`)
@@ -122,7 +130,7 @@ $(function () {
     })
 
     result = $.get("http://localhost:5000/accounts", (response) => {
-        console.log(response);
+        //console.log(response);
         var sourceSelect = $("#finance-form").find("select[name=source]");
         var destinationSelect = $("#finance-form").find("select[name=destination]");
         response.forEach((value) => {
@@ -135,6 +143,13 @@ $(function () {
     $('#datepicker').datepicker({
         format: 'yyyy-mm-dd',
     });
+
+    $('#year-list').find("li").on("click", function(){
+        if($('#dropButton').text() != $(this).text()){
+            $('#dropButton').text($(this).text());
+            updateChart();
+        }
+    })
 
     $('#new-finance').on("click", function(){
         var inputs = $("#finance-form").find("input");
@@ -158,7 +173,7 @@ $(function () {
                 response[0].id;
                 result2 = $.get(`http://localhost:5000/finance/${response[0].id}`, (response) => {
                     value = response;
-                    console.log(value);
+                    //console.log(value);
                     value.destination = value.destination ? value.destination.name : null;
                     value.typeName = value.type.name;
                     value.source = value.source.name;
@@ -312,10 +327,9 @@ function toDataSet(asset){
     }
 }
 
-async function test(data) {
+async function test(data, year) {
     // Graphs
-    console.log(data);
-    dataValues = groupByMonthAndAsset(data)
+    dataValues = groupByMonthAndAsset(data, year)
     const ctx = document.getElementById('myChart')
     // eslint-disable-next-line no-unused-vars
     if(myChart != null){
@@ -335,5 +349,20 @@ async function test(data) {
         }
     })
     //await sleep(1);
+}
+
+function updateChart(){
+    var yearStr = $("#dropButton").text().trim();
+    var yearVal = null;
+    var date = new Date();
+    switch(yearStr){
+    case "Last year":
+        yearVal = date.getFullYear() - 1;
+        break;
+    case "This year":
+    default:
+        yearVal = date.getFullYear();
+    }
+    setTimeout(test, 1, datatable.rows({search: "applied"}).data(), yearVal);
 }
 
