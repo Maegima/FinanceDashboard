@@ -17,21 +17,25 @@ function groupByMonthAndAsset(data, SelectedYear){
             color: '#007bff',
             label: "active",
             months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            indexes: [[], [], [], [], [], [], [], [], [], [], [], []]
         }, 
         passive: {
             color: '#ff007b',
             label: "passive",
             months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            indexes: [[], [], [], [], [], [], [], [], [], [], [], []]
         }, 
         neutral: {
             color: '#C0C0C0',
             label: "neutral",
-            months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            indexes: [[], [], [], [], [], [], [], [], [], [], [], []]
         },
         delayed: {
             color: '#ff7b00',
             label: "delayed",
-            months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+            months: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            indexes: [[], [], [], [], [], [], [], [], [], [], [], []]
         }
     };
     valor = 0;
@@ -42,6 +46,7 @@ function groupByMonthAndAsset(data, SelectedYear){
             asset = item.type.asset != null ? item.type.asset : "neutral";
             asset = item.type.name != "DELAYED" ? asset : "delayed";
             group[asset].months[month-1] += item.value;
+            group[asset].indexes[month-1].push(item.id);
         }
     })
 
@@ -323,7 +328,8 @@ function toDataSet(asset){
         borderColor: asset.color,
         borderWidth: 4,
         pointBackgroundColor: asset.color,
-        label: asset.label
+        label: asset.label,
+        indexes: asset.indexes 
     }
 }
 
@@ -348,6 +354,19 @@ async function test(data, year) {
             }
         }
     })
+    ctx.onclick = function(evt){
+        var activePoints = myChart.getElementsAtEventForMode(evt, 'nearest', { intersect: true }, true);
+        if (activePoints.length) {
+            const firstPoint = activePoints[0];
+            const indexes = myChart.data.datasets[firstPoint.datasetIndex].indexes[firstPoint.index];
+            datatable = $('#datatable').DataTable()
+            datatable.columns(0).search(indexes.join("|"), true).draw()
+        } else {
+            datatable = $('#datatable').DataTable()
+            datatable.search("").columns().search("").draw()
+        }
+     };
+     
     //await sleep(1);
 }
 
